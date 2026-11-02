@@ -4,6 +4,7 @@
 *.tfstate.*
 *.tfplan
 terraform.tfvars
+*.tfvars
 crash.log
 
 # Ansible : inventaire genere et secrets

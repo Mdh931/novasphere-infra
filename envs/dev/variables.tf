@@ -1,7 +1,7 @@
 variable "aws_region" {
-  description = "Region AWS de deploiement"
+  description = "Region AWS de deploiement (Learner Lab : us-east-1 ou us-west-2)"
   type        = string
-  default     = "eu-west-3"
+  default     = "us-east-1"
 }
 
 variable "owner" {
@@ -11,6 +11,16 @@ variable "owner" {
   validation {
     condition     = can(regex("^[a-z]{3}$", var.owner))
     error_message = "Le trigramme doit etre compose de 3 lettres minuscules."
+  }
+}
+
+variable "environment" {
+  description = "Environnement cible"
+  type        = string
+
+  validation {
+    condition     = contains(["dev", "prod"], var.environment)
+    error_message = "environment doit valoir dev ou prod."
   }
 }
 

@@ -21,7 +21,7 @@ data "http" "my_ip" {
 
 locals {
   my_cidr = "${chomp(data.http.my_ip.response_body)}/32"
-  name    = "novasphere-${var.owner}"
+  name    = "novasphere-${var.environment}-${var.owner}"
 }
 
 resource "aws_key_pair" "main" {
@@ -32,7 +32,7 @@ resource "aws_key_pair" "main" {
 module "web" {
   source = "git::https://github.com/Mdh931/terraform-aws-ec2-server.git?ref=v1.0.0"
 
-  name          = "web"
+  name          = "${var.environment}-web"
   ami_id        = data.aws_ami.debian.id
   instance_type = var.instance_type
   key_name      = aws_key_pair.main.key_name
@@ -43,7 +43,7 @@ module "web" {
 module "monitoring" {
   source = "git::https://github.com/Mdh931/terraform-aws-ec2-server.git?ref=v1.0.0"
 
-  name          = "monitoring"
+  name          = "${var.environment}-monitoring"
   ami_id        = data.aws_ami.debian.id
   instance_type = var.instance_type
   key_name      = aws_key_pair.main.key_name
@@ -51,23 +51,13 @@ module "monitoring" {
   open_ports    = []
 }
 
-# Inventaire Ansible genere depuis les outputs des modules
+# Un inventaire par environnement : dev et prod ne s'ecrasent jamais
 resource "local_file" "inventory" {
-  filename        = "${path.module}/../ansible/inventory.ini"
+  filename        = "${path.module}/../../ansible/inventory-${var.environment}.ini"
   file_permission = "0644"
   content = templatefile("${path.module}/inventory.tftpl", {
     web_ip        = module.web.public_ip
     monitoring_ip = module.monitoring.public_ip
+    environment   = var.environment
   })
-}
-
-# Refactoring S02 : les ressources existantes changent d'adresse, pas d'identite
-moved {
-  from = aws_instance.web
-  to   = module.web.aws_instance.this
-}
-
-moved {
-  from = aws_security_group.web
-  to   = module.web.aws_security_group.this
 }

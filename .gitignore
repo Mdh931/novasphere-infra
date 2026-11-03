@@ -15,3 +15,4 @@ ansible/.vault_pass
 # Cles et environnement
 *.pem
 .env
+ansible/inventory-*.ini
